@@ -1,27 +1,14 @@
-FROM qgis/qgis:latest
+FROM qgis/qgis-server:4.2.3
 
-# Инсталиране на lighttpd и необходими инструменти
-RUN apt-get update && apt-get install -y \
-    lighttpd \
-    spawn-fcgi \
-    && rm -rf /var/lib/apt/lists/*
+# QGIS Server's official image includes Nginx and Xvfb. Put the project and its
+# relative raster sources in the directory used by the image's OGC routes.
+COPY . /io/data/
 
-WORKDIR /app
+ENV QGIS_SERVER_LANDING_PAGE_PREFIX=/ \
+    QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES=/io/data
 
-# Копиране на проекта и ресурсите
-COPY . /app/
+# Render routes web services to port 10000 by default.
+RUN sed -i 's/listen       80 default_server;/listen       10000 default_server;/' /etc/nginx/nginx.conf \
+    && sed -i '/listen       \[::\]:80 default_server;/d' /etc/nginx/nginx.conf
 
-# Задаване на променливи
-ENV QGIS_PROJECT_FILE=/app/atmosphere_2023.qgz
-ENV QGIS_SERVER_LOG_LEVEL=0
-
-# QGIS поставя FastCGI executable в /usr/lib/cgi-bin.
-RUN echo 'server.modules = ( "mod_fastcgi", "mod_access", "mod_alias" )' > /etc/lighttpd/lighttpd.conf && \
-    echo 'server.document-root = "/app"' >> /etc/lighttpd/lighttpd.conf && \
-    echo 'server.port = 8080' >> /etc/lighttpd/lighttpd.conf && \
-    echo 'fastcgi.server = ( "" => (( "bin-path" => "/usr/lib/cgi-bin/qgis_mapserv.fcgi", "socket" => "/tmp/qgis-server.sock", "check-local" => "disable", "max-procs" => 1, "bin-environment" => ( "QGIS_PROJECT_FILE" => "/app/atmosphere_2023.qgz" ) )))' >> /etc/lighttpd/lighttpd.conf
-
-EXPOSE 8080
-
-# Стартиране на Lighttpd на преден план
-CMD ["lighttpd", "-D", "-f", "/etc/lighttpd/lighttpd.conf"]
+EXPOSE 10000
