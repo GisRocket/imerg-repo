@@ -15,11 +15,11 @@ COPY . /app/
 ENV QGIS_PROJECT_FILE=/app/atmosphere_2023.qgz
 ENV QGIS_SERVER_LOG_LEVEL=0
 
-# Създаване на правилен lighttpd.conf с точния път до qgis_mapserv.fcgi
+# QGIS поставя FastCGI executable в /usr/lib/cgi-bin.
 RUN echo 'server.modules = ( "mod_fastcgi", "mod_access", "mod_alias" )' > /etc/lighttpd/lighttpd.conf && \
     echo 'server.document-root = "/app"' >> /etc/lighttpd/lighttpd.conf && \
     echo 'server.port = 8080' >> /etc/lighttpd/lighttpd.conf && \
-    echo 'fastcgi.server = ( "" => (( "bin-path" => "/usr/lib/qgis/qgis_mapserv.fcgi", "socket" => "/tmp/qgis-server.sock", "check-local" => "disable", "max-procs" => 1, "bin-environment" => ( "QGIS_PROJECT_FILE" => "/app/atmosphere_2023.qgz" ) )))' >> /etc/lighttpd/lighttpd.conf
+    echo 'fastcgi.server = ( "" => (( "bin-path" => "/usr/lib/cgi-bin/qgis_mapserv.fcgi", "socket" => "/tmp/qgis-server.sock", "check-local" => "disable", "max-procs" => 1, "bin-environment" => ( "QGIS_PROJECT_FILE" => "/app/atmosphere_2023.qgz" ) )))' >> /etc/lighttpd/lighttpd.conf
 
 EXPOSE 8080
 
