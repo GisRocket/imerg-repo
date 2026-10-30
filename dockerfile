@@ -4,7 +4,7 @@ FROM qgis/qgis-server:4.2.3
 # relative raster sources in the directory used by the image's OGC routes.
 COPY . /io/data/
 
-ENV QGIS_SERVER_LANDING_PAGE_PREFIX=/ \
+ENV QGIS_SERVER_LANDING_PAGE_PREFIX=/catalog \
     QGIS_SERVER_LANDING_PAGE_PROJECTS_DIRECTORIES=/io/data
 
 # Render routes web services to port 10000 by default.
